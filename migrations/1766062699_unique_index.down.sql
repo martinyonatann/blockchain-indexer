@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS evm_logs_unique_on_transaction_hash_log_index;
