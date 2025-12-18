@@ -12,9 +12,9 @@ server:
 database:
   host: "localhost"
   port: 5432
-  username: "admin"
-  password: "password"
-  database: "myapp"
+  username: "app"
+  password: ""
+  database: "indexers"
   max_connections: 10
   ssl_mode: "disable"
 

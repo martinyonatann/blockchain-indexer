@@ -1,0 +1,13 @@
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_DB: indexers
+      POSTGRES_HOST_AUTH_METHOD: trust
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - 127.0.0.1:5432:5432
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
