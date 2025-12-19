@@ -1,4 +1,4 @@
-use sqlx::prelude::FromRow;
+use sqlx::{prelude::FromRow, types::chrono};
 
 #[derive(Debug, Clone, FromRow)]
 pub struct EvmChains {
