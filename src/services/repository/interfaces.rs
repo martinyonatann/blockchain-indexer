@@ -38,6 +38,7 @@ pub trait EVMSyncLogsRepository {
     ) -> Result<EVMSyncLogs, sqlx::error::Error>;
     async fn update_last_synced_block_number(
         &self,
+        address: &str,
         block_number: u64,
     ) -> Result<EVMSyncLogs, sqlx::Error>;
 }
