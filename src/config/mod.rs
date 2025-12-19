@@ -76,8 +76,6 @@ pub fn load_config() -> Result<AppConfig, Box<dyn std::error::Error>> {
     let app = envy::prefixed("APP_APP__").from_env::<AppInfo>()?;
     let server = envy::prefixed("APP_SERVER__").from_env::<ServerConfig>()?;
     let log = envy::prefixed("APP_LOG__").from_env::<LogConfig>()?;
-
-    // 👇 DATABASE_URL is global, no prefix
     let database_url = std::env::var("DATABASE_URL")?;
 
     let database = DatabaseConfig {
