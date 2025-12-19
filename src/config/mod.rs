@@ -1,8 +1,9 @@
-use std::sync::RwLock;
-
-use config::{Config, ConfigError, Environment, File};
+use dotenvy::dotenv;
 use once_cell::sync::Lazy;
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use serde_value::Value;
+use std::sync::RwLock;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppConfig {
@@ -23,78 +24,105 @@ pub struct AppInfo {
 pub struct ServerConfig {
     pub host: String,
     pub port: u16,
+
     #[serde(default = "default_workers")]
     pub workers: usize,
+
     #[serde(default)]
     pub timeout: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseConfig {
-    pub host: String,
-    pub port: u16,
-    pub username: String,
-    pub password: String,
-    pub database: String,
+    /// Used directly by sqlx
+    pub database_url: String,
+
     #[serde(default = "default_max_connections")]
     pub max_connections: u32,
-    #[serde(default)]
-    pub ssl_mode: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogConfig {
     pub level: String,
+
     #[serde(default = "default_log_format")]
     pub format: String,
+
     #[serde(default = "default_log_output")]
     pub output: String,
 }
 
+/* ---------------- defaults ---------------- */
+
 fn default_max_connections() -> u32 {
     10
 }
+
 fn default_workers() -> usize {
     4
 }
+
 fn default_log_format() -> String {
     "json".to_string()
 }
+
 fn default_log_output() -> String {
     "stdout".to_string()
 }
 
-pub fn load_config() -> Result<AppConfig, ConfigError> {
-    let config = Config::builder()
-        .add_source(File::with_name("config/config.yaml").required(true))
-        .add_source(
-            Environment::with_prefix("APP")
-                .separator("__")
-                .try_parsing(true),
-        )
-        .build()?;
+pub fn load_config() -> Result<AppConfig, Box<dyn std::error::Error>> {
+    dotenv().ok();
 
-    config.try_deserialize::<AppConfig>()
+    let app = envy::prefixed("APP_APP__").from_env::<AppInfo>()?;
+    let server = envy::prefixed("APP_SERVER__").from_env::<ServerConfig>()?;
+    let log = envy::prefixed("APP_LOG__").from_env::<LogConfig>()?;
+
+    // 👇 DATABASE_URL is global, no prefix
+    let database_url = std::env::var("DATABASE_URL")?;
+
+    let database = DatabaseConfig {
+        database_url,
+        max_connections: envy::prefixed("APP_DATABASE__")
+            .from_env::<DatabaseConfig>()
+            .unwrap_or(DatabaseConfig {
+                database_url: String::new(), // overwritten
+                max_connections: default_max_connections(),
+            })
+            .max_connections,
+    };
+
+    Ok(AppConfig {
+        app,
+        server,
+        database,
+        log,
+    })
 }
 
-pub static CONFIG: Lazy<RwLock<AppConfig>> =
-    Lazy::new(|| RwLock::new(load_config().expect("Failed to load configuration")));
+pub static CONFIG: Lazy<RwLock<AppConfig>> = Lazy::new(|| {
+    let config = load_config().expect("Failed to load configuration");
+    RwLock::new(config)
+});
 
 pub fn get_config() -> AppConfig {
     CONFIG.read().unwrap().clone()
 }
 
-pub fn get<T: serde::de::DeserializeOwned>(key: &str) -> Option<T> {
+pub fn get<T: DeserializeOwned>(key: &str) -> Option<T> {
     let config = get_config();
-    let value = serde_yaml::to_value(&config).ok()?;
+    let value = serde_value::to_value(&config).ok()?;
 
-    // Navigate nested keys (e.g., "app.name")
     let mut current = &value;
     for part in key.split('.') {
-        current = current.get(part)?;
+        match current {
+            Value::Map(map) => {
+                current = map.get(&Value::String(part.to_string()))?;
+            }
+            _ => return None,
+        }
     }
 
-    serde_yaml::from_value(current.clone()).ok()
+    T::deserialize(current.clone()).ok()
 }
 
 pub fn get_string(key: &str) -> Option<String> {
@@ -109,10 +137,11 @@ pub fn get_bool(key: &str) -> Option<bool> {
     get::<bool>(key)
 }
 
-pub fn init() -> Result<(), ConfigError> {
+pub fn init() {
     let _unused = CONFIG.read().unwrap();
-    Ok(())
 }
+
+/* ---------------- tests ---------------- */
 
 #[cfg(test)]
 mod tests {
@@ -120,17 +149,14 @@ mod tests {
 
     #[test]
     fn test_load_config() {
-        println!("cwd: {:?}", std::env::current_dir().unwrap());
         let config = load_config();
-
-        assert!(config.is_ok())
+        assert!(config.is_ok());
     }
 
     #[test]
     fn test_get_string() {
-        let _unused = CONFIG.read().unwrap();
+        init();
         let app_name = get_string("app.name");
-
         assert!(app_name.is_some());
     }
 }
