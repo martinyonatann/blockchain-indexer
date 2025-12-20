@@ -1,9 +1,7 @@
 use async_trait::async_trait;
 use sqlx::PgPool;
 
-use crate::services::{
-    entities::evm_chains::EvmChains, repository::interfaces::EVMChainRepository,
-};
+use crate::services::{entities::evm_chains::EvmChains, repository::EVMChainRepository};
 
 pub struct EVMChainRepositoryImpl {
     pool: PgPool,

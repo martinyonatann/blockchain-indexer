@@ -1,9 +1,7 @@
 use async_trait::async_trait;
 use sqlx::PgPool;
 
-use crate::services::{
-    entities::evm_sync_logs::EVMSyncLogs, repository::interfaces::EVMSyncLogsRepository,
-};
+use crate::services::{entities::evm_sync_logs::EVMSyncLogs, repository::EVMSyncLogsRepository};
 
 pub struct EVMSyncLogsRepositoryImpl {
     pool: PgPool,
@@ -42,7 +40,7 @@ impl EVMSyncLogsRepository for EVMSyncLogsRepositoryImpl {
     ) -> Result<EVMSyncLogs, sqlx::Error> {
         let query = r#"
             INSERT INTO evm_sync_logs (address, chain_id, last_synced_block_number)
-            VALUE ($1::BYTEA, $2, $3)
+            VALUES ($1::BYTEA, $2, $3)
             RETURNING *
             "#;
 
@@ -72,7 +70,7 @@ impl EVMSyncLogsRepository for EVMSyncLogsRepositoryImpl {
 
     async fn update_last_synced_block_number(
         &self,
-        address: &str,
+        address: [u8; 20],
         block_number: u64,
     ) -> Result<EVMSyncLogs, sqlx::Error> {
         let query = r#"UPDATE evm_sync_logs SET last_synced_block_number = $1 WHERE address = $2 RETURNING *"#;
