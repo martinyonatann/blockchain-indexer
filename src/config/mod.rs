@@ -11,6 +11,7 @@ pub struct AppConfig {
     pub server: ServerConfig,
     pub database: DatabaseConfig,
     pub log: LogConfig,
+    pub listener: ListenerConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -51,6 +52,12 @@ pub struct LogConfig {
     #[serde(default = "default_log_output")]
     pub output: String,
 }
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ListenerConfig {
+    pub chain_id: u64,
+    pub contract_addresses: String,
+    pub rpc_url: String,
+}
 
 /* ---------------- defaults ---------------- */
 
@@ -76,6 +83,7 @@ pub fn load_config() -> Result<AppConfig, Box<dyn std::error::Error>> {
     let app = envy::prefixed("APP_APP__").from_env::<AppInfo>()?;
     let server = envy::prefixed("APP_SERVER__").from_env::<ServerConfig>()?;
     let log = envy::prefixed("APP_LOG__").from_env::<LogConfig>()?;
+    let listener = envy::prefixed("APP_LISTENER__").from_env::<ListenerConfig>()?;
     let database_url = std::env::var("DATABASE_URL")?;
 
     let database = DatabaseConfig {
@@ -94,6 +102,7 @@ pub fn load_config() -> Result<AppConfig, Box<dyn std::error::Error>> {
         server,
         database,
         log,
+        listener,
     })
 }
 

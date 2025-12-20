@@ -35,6 +35,7 @@ pub struct EVMLogs {
     pub created_at: chrono::NaiveDateTime,
 }
 
+// Only needed if read logs from DB and convert back to Log
 impl TryInto<Log> for EVMLogs {
     type Error = EVMLogsError;
 
@@ -53,7 +54,7 @@ impl TryInto<Log> for EVMLogs {
             .parse::<u64>()
             .map_err(|_| EVMLogsError::InvalidBlockNumber(self.block_number.to_string()))?;
 
-        let logs = Log {
+        Ok(Log {
             inner,
             block_number: Some(block_number),
             block_hash: None,
@@ -62,8 +63,6 @@ impl TryInto<Log> for EVMLogs {
             transaction_index: None,
             log_index: None,
             removed: false,
-        };
-
-        Ok(logs)
+        })
     }
 }
