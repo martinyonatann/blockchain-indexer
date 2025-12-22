@@ -57,3 +57,24 @@ pub fn create_log_filter(
         .from_block(BlockNumberOrTag::Number(from_block))
         .to_block(BlockNumberOrTag::Number(to_block)))
 }
+
+#[cfg(test)]
+mod filter_tests {
+    use super::*;
+    use crate::services::usecase::errors::AppError;
+
+    #[test]
+    fn create_log_filter_success() {
+        let filter =
+            create_log_filter("0x1111111111111111111111111111111111111111", 100, 200).unwrap();
+
+        assert_eq!(filter.get_from_block(), Some(100));
+        assert_eq!(filter.get_to_block(), Some(200));
+    }
+
+    #[test]
+    fn create_log_filter_invalid_addr() {
+        let result = create_log_filter("INVALID_ADDR", 10, 20);
+        assert!(matches!(result, Err(AppError::InvalidAddress(_))));
+    }
+}

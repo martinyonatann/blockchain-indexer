@@ -25,6 +25,18 @@ pub enum AppError {
 
     #[error("Invalid ChainID: `{0}`")]
     InvalidChainID(String),
+
+    #[error("Missing Contract Abi File : `{0}`")]
+    MissingContractAbiFile(String),
+
+    #[error("Invalid Abi File : `{0}`")]
+    InvalidAbiFile(String),
+
+    #[error("Missing event in contract `{0}` for signature `{1}`")]
+    MissingEvent(String, String),
+
+    #[error("Missing event handler `{0}` for contract `{1}`")]
+    MissingEventHandler(String, String),
 }
 
 impl From<alloy::transports::TransportError> for AppError {
