@@ -20,7 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let batch_size = config.processor.batch_size.parse::<u64>()?;
     let abi_loader = AbiLoader::new(config.processor.artifacts_base_path);
     let mut contract_name_by_address: HashMap<String, String> = HashMap::new();
-    let contract = config.processor.contract;
+    let contract = config.processor.contracts;
     contract.split(",").for_each(|contract| {
         let contract_details: Vec<&str> = contract
             .split(":")

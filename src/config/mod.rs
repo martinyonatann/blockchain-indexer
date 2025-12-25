@@ -63,7 +63,7 @@ pub struct ListenerConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProcessorConfig {
     pub artifacts_base_path: String,
-    pub contract: String,
+    pub contracts: String,
     #[serde(default = "default_poll_interval")]
     pub poll_interval: String,
     #[serde(default = "default_batch_size")]
@@ -102,7 +102,7 @@ pub fn load_config() -> Result<AppConfig, Box<dyn std::error::Error>> {
     let app = envy::prefixed("APP_APP__").from_env::<AppInfo>()?;
     let server = envy::prefixed("APP_SERVER__").from_env::<ServerConfig>()?;
     let log = envy::prefixed("APP_LOG__").from_env::<LogConfig>()?;
-    let listener = envy::prefixed("APP_PROCESSOR__").from_env::<ListenerConfig>()?;
+    let listener = envy::prefixed("APP_LISTENER__").from_env::<ListenerConfig>()?;
     let processor = envy::prefixed("APP_PROCESSOR__").from_env::<ProcessorConfig>()?;
     let database_url = std::env::var("DATABASE_URL")?;
 
