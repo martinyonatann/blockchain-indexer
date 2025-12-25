@@ -1,23 +1,24 @@
 use alloy::{
     hex,
     json_abi::JsonAbi,
-    primitives::{Address, Log, keccak256},
+    primitives::{Address, keccak256},
+    rpc::types::Log,
 };
+use async_trait::async_trait;
 
 use crate::{
     infrastructure::{abi::abi_loader::AbiLoader, contracts::ContractHandler},
-    services::usecase::errors::AppError,
+    services::{entities::evm_logs::EVMLogs, usecase::errors::AppError},
 };
 
-pub struct AlloyContractHandler {
+pub struct UniswapV3Factory {
+    #[allow(dead_code)]
     pub address: Address,
     pub abi: JsonAbi,
 }
 
-impl ContractHandler for AlloyContractHandler {
-    const NAME: &str = "uniswap_v3_factory";
-
-    fn new(address: &str, loader: AbiLoader) -> Result<Self, AppError> {
+impl UniswapV3Factory {
+    pub fn new(address: &str, loader: AbiLoader) -> Result<Self, AppError> {
         let addr = address
             .parse::<Address>()
             .map_err(|_| AppError::InvalidAddress(address.into()))?;
@@ -26,6 +27,11 @@ impl ContractHandler for AlloyContractHandler {
 
         Ok(Self { address: addr, abi })
     }
+}
+
+#[async_trait]
+impl ContractHandler for UniswapV3Factory {
+    const NAME: &str = "uniswap_v3_factory";
 
     fn event_signature_to_name(&self, signature: [u8; 32]) -> Result<String, AppError> {
         let log_sig_hex = format!("0x{}", hex::encode(signature));
@@ -59,6 +65,21 @@ impl ContractHandler for AlloyContractHandler {
                     unsupported.into(),
                 )),
             }
+        }
+    }
+
+    fn process(
+        &self,
+        unprocessed_log: EVMLogs,
+    ) -> impl std::future::Future<Output = Result<(), AppError>> + Send
+    where
+        Self: Sync,
+    {
+        async move {
+            let event_name = self.event_signature_to_name(unprocessed_log.event_signature)?;
+            let log: Log = unprocessed_log.try_into()?;
+            self.handle_event(&event_name, &log).await?;
+            Ok(())
         }
     }
 }
