@@ -37,7 +37,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         10,
     ));
 
-    dbg!("here");
     let evm_chain = evm_chain_repo.fetch_by_id(config.listener.chain_id).await?;
     let addresses: Vec<String> = config
         .listener
@@ -45,8 +44,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .split(",")
         .map(|s| s.to_string())
         .collect();
-
-    dbg!("here2");
 
     let mut futures = JoinSet::new();
     for address in addresses {

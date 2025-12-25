@@ -12,6 +12,7 @@ pub struct AppConfig {
     pub database: DatabaseConfig,
     pub log: LogConfig,
     pub listener: ListenerConfig,
+    pub processor: ProcessorConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -59,6 +60,16 @@ pub struct ListenerConfig {
     pub rpc_url: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProcessorConfig {
+    pub artifacts_base_path: String,
+    pub contracts: String,
+    #[serde(default = "default_poll_interval")]
+    pub poll_interval: String,
+    #[serde(default = "default_batch_size")]
+    pub batch_size: String,
+}
+
 /* ---------------- defaults ---------------- */
 
 fn default_max_connections() -> u32 {
@@ -77,6 +88,14 @@ fn default_log_output() -> String {
     "stdout".to_string()
 }
 
+fn default_poll_interval() -> String {
+    "10".to_string()
+}
+
+fn default_batch_size() -> String {
+    "25".to_string()
+}
+
 pub fn load_config() -> Result<AppConfig, Box<dyn std::error::Error>> {
     dotenv().ok();
 
@@ -84,6 +103,7 @@ pub fn load_config() -> Result<AppConfig, Box<dyn std::error::Error>> {
     let server = envy::prefixed("APP_SERVER__").from_env::<ServerConfig>()?;
     let log = envy::prefixed("APP_LOG__").from_env::<LogConfig>()?;
     let listener = envy::prefixed("APP_LISTENER__").from_env::<ListenerConfig>()?;
+    let processor = envy::prefixed("APP_PROCESSOR__").from_env::<ProcessorConfig>()?;
     let database_url = std::env::var("DATABASE_URL")?;
 
     let database = DatabaseConfig {
@@ -103,6 +123,7 @@ pub fn load_config() -> Result<AppConfig, Box<dyn std::error::Error>> {
         database,
         log,
         listener,
+        processor,
     })
 }
 

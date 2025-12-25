@@ -3,6 +3,8 @@ use std::fs;
 use alloy::json_abi::JsonAbi;
 
 use crate::services::usecase::errors::AppError;
+
+#[derive(Clone)]
 pub struct AbiLoader {
     artifacts_base_path: String,
 }

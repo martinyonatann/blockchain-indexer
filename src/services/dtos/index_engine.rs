@@ -1,3 +1,5 @@
+use crate::services::usecase::errors::AppError;
+
 pub struct PoolCreatedRequest {
     pub pool: String,
     pub token0: String,
@@ -13,4 +15,14 @@ pub struct OwnerChangedRequest {
 pub struct FeeAmountEnabledRequest {
     pub fee: u32,
     pub tick_spacing: i32,
+}
+
+#[derive(Debug)]
+pub enum BatchResult {
+    NoLogsFound,
+    BatchProcessed {
+        total: u64,
+        processed: usize,
+        errors: Vec<(i64, AppError)>,
+    },
 }

@@ -4,6 +4,7 @@ use sqlx::{PgPool, types::BigDecimal};
 
 use crate::services::{entities::evm_logs::EVMLogs, repository::EVMLogsRepository};
 
+#[derive(Clone)]
 pub struct EVMLogsRepositoryImpl {
     pool: PgPool,
 }

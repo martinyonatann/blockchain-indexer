@@ -1,8 +1,9 @@
-pub mod alloy_contract_handler;
-use crate::{infrastructure::abi::abi_loader::AbiLoader, services::usecase::errors::AppError};
-use alloy::primitives::Log;
+pub mod contract_registry;
+pub mod uniswap;
+use alloy::rpc::types::Log;
 
-pub trait ContractHandler {
+use crate::services::{entities::evm_logs::EVMLogs, usecase::errors::AppError};
+pub trait ContractHandler: Send + Sync {
     const NAME: &str;
 
     fn event_signature_to_name(&self, signature: [u8; 32]) -> Result<String, AppError>;
@@ -13,7 +14,8 @@ pub trait ContractHandler {
         log: &Log,
     ) -> impl std::future::Future<Output = Result<(), AppError>> + Send;
 
-    fn new(address: &str, loader: AbiLoader) -> Result<Self, AppError>
-    where
-        Self: Sized;
+    fn process(
+        &self,
+        unprocessed_log: EVMLogs,
+    ) -> impl std::future::Future<Output = Result<(), AppError>> + Send;
 }

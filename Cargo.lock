@@ -1092,6 +1092,7 @@ dependencies = [
  "config",
  "dotenvy",
  "envy",
+ "futures",
  "once_cell",
  "serde",
  "serde-value",
